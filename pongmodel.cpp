@@ -28,9 +28,9 @@ bool Ball::moveMe(const Map &map){
     else if(map[newPos.y()][newPos.x()] == FIRST_GATE || map[newPos.y()][newPos.x()] == SECOND_GATE){
         modifier = false;
         if(map[newPos.y()][newPos.x()] == FIRST_GATE)
-            emit firstGetPoints();
-        else
             emit secondGetPoints();
+        else
+            emit firstGetPoints();
     }
 
     else{
@@ -125,7 +125,7 @@ void Playmap::makeMap()
     }
 }
 
-void Playmap::makeWallsAndGates()
+void Playmap::makeWallsAndGates() // fix those dirty shit
 {
     int wid = m_MapSize.width();
     int hei = m_MapSize.height();
@@ -133,6 +133,7 @@ void Playmap::makeWallsAndGates()
     for(int colNmb = 0; colNmb < wid; colNmb++){
         m_Map[0][colNmb] = WALL;
         m_Map[hei - 1][colNmb] = WALL;
+        m_Map[hei - 2][colNmb] = WALL;      // fix those dirty shit
     }
 
     for(int lineNmb = 0; lineNmb < hei; lineNmb++){
@@ -172,7 +173,6 @@ void Playmap::putPaddle(Paddle * paddle){
     for(int piece = 0; piece < size; piece++){
         m_Map[ pos.x() + piece ][ pos.y() ] = PADDLE;
     }
-
 }
 
 void Playmap::clearMap(){
@@ -191,20 +191,20 @@ Playmap::Playmap(QSize mapSize) : m_MapSize(mapSize){
 
 ////    PLAYER
 
-void Player::isWinner()
-{
-    if(m_Score == POINTS_TO_WIN){
-        emit (m_PlayerNumber == FIRST_PLAYER ?  firstPlayerWin() : secondPlayerWin());
-    }
+QString Player::showName(){
+    return m_Name;
+}
+
+void Player::resetPoints(){
+    m_Score = 0;
 }
 
 int Player::showPoints(){
     return m_Score;
 }
 
-void Player::addPoints(){
+void Player::addPoint(){
     m_Score++;
-    isWinner();
 }
 
 Player::Player(int myNr) : m_PlayerNumber(myNr){
@@ -215,11 +215,21 @@ Player::Player(int myNr) : m_PlayerNumber(myNr){
 
 ////    PONG MODEL
 
+QString PongModel::showName(int player){
+    return player == FIRST_P ? m_FirstPlayer->showName() : m_SecondPlayer->showName();
+}
+
 int PongModel::showScore(int player){
-    return player == FIRST_PLAYER ? m_FirstPlayer->showPoints() : m_SecondPlayer->showPoints();
+    return player == FIRST_P ? m_FirstPlayer->showPoints() : m_SecondPlayer->showPoints();
 }
 
 void PongModel::setBasicConfiguration(){
+    m_FirstPlayer->resetPoints();
+    m_SecondPlayer->resetPoints();
+    setBasicPositions();
+}
+
+void PongModel::setBasicPositions(){
     m_Ball->setPosition(CENTER_POS);
 
     delete m_FirstPaddle;
@@ -232,13 +242,13 @@ void PongModel::setBasicConfiguration(){
 }
 
 void PongModel::firstPlayerAddPoints(){
-    setBasicConfiguration();
-    m_FirstPlayer->addPoints();
+    setBasicPositions();
+    m_FirstPlayer->addPoint();
 }
 
 void PongModel::secondPlayerAddPoints(){
-    setBasicConfiguration();
-    m_SecondPlayer->addPoints();
+    setBasicPositions();
+    m_SecondPlayer->addPoint();
 }
 
 void PongModel::moveBall(){
@@ -253,7 +263,7 @@ void PongModel::refresh(){
 }
 
 void PongModel::movePaddle(int player, int way){
-    player == FIRST_PLAYER ? m_FirstPaddle->moveMe(way) : m_SecondPaddle->moveMe(way);
+    player == FIRST_P ? m_FirstPaddle->moveMe(way) : m_SecondPaddle->moveMe(way);
 }
 
 void PongModel::makeNoise(int wallsNumber){
@@ -270,8 +280,8 @@ PongModel::PongModel(const int WIDTH, const int HEIGHT) :
 
     m_PlayMap       = new Playmap(GAME_SIZE);
     m_Ball          = new Ball(CENTER_POS);
-    m_FirstPlayer   = new Player(FIRST_PLAYER);
-    m_SecondPlayer  = new Player(SECOND_PLAYER);
+    m_FirstPlayer   = new Player(FIRST_P);
+    m_SecondPlayer  = new Player(SECOND_P);
     m_FirstPaddle   = new Paddle(PADDLE_SIZE, GAME_SIZE, FIRST_LOC);
     m_SecondPaddle  = new Paddle(PADDLE_SIZE, GAME_SIZE, SECOND_LOC);
 

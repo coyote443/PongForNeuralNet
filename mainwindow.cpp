@@ -4,6 +4,7 @@
 #include "pongwidget.h"
 #include "pongmodel.h"
 #include <QInputDialog>
+#include <QMessageBox>
 
 #include <QDebug>
 static QTextStream cout(stdout);
@@ -22,14 +23,14 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->GameWidget = m_PongWidget;
 
-    //setCentralWidget(m_PongWidget);
-
     m_PongBoardSize = QSize(WIDTH, HEIGHT);
     m_PongCurrentImage = QImage(m_PongBoardSize, QImage::Format_Mono);
     m_PongCurrentImage.fill(FILLED);
     m_PongWidget->setImage(m_PongCurrentImage);
-    startTimer(MS_TO_NEXT_EVENT);
 
+    ui->ScoreToWin->display(POINTS_TO_WIN);
+
+    startTimer(MS_TO_NEXT_EVENT);
     drawBoard();
 }
 
@@ -43,17 +44,40 @@ void MainWindow::timerEvent(QTimerEvent *){
         m_PongModel->moveBall();
         m_PongModel->refresh();
         drawBoard();
+        checkWinner();
     }
 }
+
 
 void MainWindow::on_actionStart_triggered(){
     m_PongIsRunning = !m_PongIsRunning;
     drawBoard();
 }
 
+void MainWindow::checkWinner(){
+    int frstScore = m_PongModel->showScore(FIRST_P);
+    int scndScore = m_PongModel->showScore(SECOND_P);
+
+    if(frstScore == POINTS_TO_WIN || scndScore == POINTS_TO_WIN){
+        QString WinnerName = (frstScore == POINTS_TO_WIN ? m_PongModel->showName(FIRST_P) : m_PongModel->showName(SECOND_P));
+        QMessageBox::StandardButton butt;
+
+        butt = QMessageBox::question(0, "Wygrana", QString("Wygrał %1 czy chcesz grać dalej?").arg(WinnerName),
+                                     QMessageBox::Yes | QMessageBox::No);
+
+        if(butt == QMessageBox::Yes){
+            m_PongIsRunning = false;
+            m_PongModel->setBasicConfiguration();
+        }
+        else
+            QApplication::quit();
+    }
+
+}
+
 void MainWindow::drawBoard(){
-    ui->ScoreFirstPlayer->display(m_PongModel->showScore(FIRST_PLAYER));
-    ui->ScoreSecondPlayer->display(m_PongModel->showScore(SECOND_PLAYER));
+    ui->ScoreFirstPlayer->display(m_PongModel->showScore(FIRST_P));
+    ui->ScoreSecondPlayer->display(m_PongModel->showScore(SECOND_P));
 
     QImage next = m_PongCurrentImage;
     const Map & map = m_PongModel->showMap();
@@ -77,7 +101,7 @@ void MainWindow::on_actionMakeNoise_triggered()
 
 void MainWindow::on_actionFirstPlayerUp_triggered(){
     if(m_PongIsRunning){
-        m_PongModel->movePaddle(FIRST_PLAYER, UP);
+        m_PongModel->movePaddle(FIRST_P, UP);
         m_PongModel->refresh();
         drawBoard();
     }
@@ -85,7 +109,7 @@ void MainWindow::on_actionFirstPlayerUp_triggered(){
 
 void MainWindow::on_actionFirstPlayerDown_triggered(){
     if(m_PongIsRunning){
-        m_PongModel->movePaddle(FIRST_PLAYER, DOWN);
+        m_PongModel->movePaddle(FIRST_P, DOWN);
         m_PongModel->refresh();
         drawBoard();
     }
@@ -93,7 +117,7 @@ void MainWindow::on_actionFirstPlayerDown_triggered(){
 
 void MainWindow::on_actionSecondPlayerUp_triggered(){
     if(m_PongIsRunning){
-        m_PongModel->movePaddle(SECOND_PLAYER, UP);
+        m_PongModel->movePaddle(SECOND_P, UP);
         m_PongModel->refresh();
         drawBoard();
     }
@@ -101,7 +125,7 @@ void MainWindow::on_actionSecondPlayerUp_triggered(){
 
 void MainWindow::on_actionSecondPlayerDown_triggered(){
     if(m_PongIsRunning){
-        m_PongModel->movePaddle(SECOND_PLAYER, DOWN);
+        m_PongModel->movePaddle(SECOND_P, DOWN);
         m_PongModel->refresh();
         drawBoard();
     }

@@ -10,7 +10,7 @@
 typedef QVector<int> Row;
 typedef QVector<Row> Map;
 
-enum {PADDLE_SIZE = 5, FIRST_LOC = 0, SECOND_LOC = 1, FIRST_PLAYER = 0, SECOND_PLAYER = 1};
+enum {PADDLE_SIZE = 5, FIRST_LOC = 0, SECOND_LOC = 1, FIRST_P = 0, SECOND_P = 1};
 enum {FIRST_GATE  = -2, SECOND_GATE = -1, EMPTY = 0, WALL = 1, PADDLE = 2, BALL = 3, UP = 1, DOWN = 0};
 enum {POINTS_TO_WIN = 10};
 
@@ -75,18 +75,15 @@ class Player : QObject{
     Q_OBJECT
 public:
     Player(int myNr);
-    void addPoints();
-    int  showPoints();
-    void isWinner();
-
-signals:
-    void firstPlayerWin();
-    void secondPlayerWin();
+    void    addPoint();
+    void    resetPoints();
+    int     showPoints();
+    QString showName();
 
 private:
-    int         m_Score;
-    int         m_PlayerNumber;
-    QString     m_Name;
+    int     m_Score;
+    int     m_PlayerNumber;
+    QString m_Name;
 };
 
 
@@ -102,8 +99,10 @@ public:
     void    movePaddle(int player, int way);
     void    moveBall();
     void    refresh();
+    void    setBasicPositions();
     void    setBasicConfiguration();
     int     showScore(int player);
+    QString showName(int player);
     ~PongModel();
 
 public slots:

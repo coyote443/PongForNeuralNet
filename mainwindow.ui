@@ -50,6 +50,25 @@
       </widget>
      </item>
      <item>
+      <spacer name="horizontalSpacer_5">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeType">
+        <enum>QSizePolicy::Fixed</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>200</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QLCDNumber" name="ScoreToWin"/>
+     </item>
+     <item>
       <spacer name="horizontalSpacer">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
@@ -59,7 +78,7 @@
        </property>
        <property name="sizeHint" stdset="0">
         <size>
-         <width>400</width>
+         <width>200</width>
          <height>20</height>
         </size>
        </property>
@@ -86,9 +105,51 @@
      </item>
     </layout>
    </widget>
+   <widget class="QLabel" name="label">
+    <property name="geometry">
+     <rect>
+      <x>370</x>
+      <y>20</y>
+      <width>55</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>To Win:</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_2">
+    <property name="geometry">
+     <rect>
+      <x>700</x>
+      <y>20</y>
+      <width>55</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Score 2:</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_3">
+    <property name="geometry">
+     <rect>
+      <x>40</x>
+      <y>20</y>
+      <width>55</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Score 1:</string>
+    </property>
+   </widget>
    <zorder>widget</zorder>
    <zorder>verticalLayoutWidget</zorder>
    <zorder>horizontalLayoutWidget</zorder>
+   <zorder>label</zorder>
+   <zorder>label_2</zorder>
+   <zorder>label_3</zorder>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
@@ -182,6 +243,9 @@
    </property>
    <property name="toolTip">
     <string>Dodaj w losowych miejscach ściany</string>
+   </property>
+   <property name="shortcut">
+    <string>N</string>
    </property>
   </action>
  </widget>

@@ -16,6 +16,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 public:
     explicit MainWindow(QWidget *parent = 0);
+    void checkWinner();
     ~MainWindow();
 
 private slots:
@@ -37,7 +38,6 @@ private:
     PongWidget* m_PongWidget;
     PongModel*  m_PongModel;
     QImage      m_PongCurrentImage;
-    QTime       m_PongTimer;
     bool        m_PongIsRunning         = false;
 };
 
