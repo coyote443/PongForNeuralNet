@@ -13,8 +13,12 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        mainwindow.cpp
+        mainwindow.cpp \
+    pongwidget.cpp \
+    pongmodel.cpp
 
-HEADERS  += mainwindow.h
+HEADERS  += mainwindow.h \
+    pongwidget.h \
+    pongmodel.h
 
 FORMS    += mainwindow.ui
