@@ -17,19 +17,20 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     void checkWinner();
+    void checkTimer();
     ~MainWindow();
 
 private slots:
     void on_actionStart_triggered();
     void drawBoard();
+    void resetTimeStuff();
     void on_actionMakeNoise_triggered();
     void on_actionFirstPlayerUp_triggered();
     void on_actionFirstPlayerDown_triggered();
     void on_actionSecondPlayerUp_triggered();
     void on_actionSecondPlayerDown_triggered();
+    void timerEvent();
 
-protected:
-    void timerEvent(QTimerEvent*);
 
 private:
     Ui::MainWindow *ui;
@@ -39,6 +40,9 @@ private:
     PongModel*  m_PongModel;
     QImage      m_PongCurrentImage;
     bool        m_PongIsRunning         = false;
+    QTimer*     m_Timer;
+    int         m_CurrSpeedModifier;
+    int         m_Speed;
 };
 
 #endif // MAINWINDOW_H

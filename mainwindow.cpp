@@ -7,6 +7,8 @@
 #include <QMessageBox>
 
 #include <QDebug>
+#include <QTimer>
+
 static QTextStream cout(stdout);
 
 
@@ -17,6 +19,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
     m_PongWidget    = new PongWidget(this);
     m_PongModel     = new PongModel(WIDTH, HEIGHT);
+    m_Timer         = new QTimer(this);
 
     m_PongWidget->setFixedSize(800,470);
     m_PongWidget->move(10, 120);
@@ -30,7 +33,13 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->ScoreToWin->display(POINTS_TO_WIN);
 
-    startTimer(MS_TO_NEXT_EVENT);
+    connect((QObject *)m_PongModel, SIGNAL(sbGetPoints()), this, SLOT(resetTimeStuff()) );
+    connect(m_Timer, SIGNAL(timeout()), this, SLOT(timerEvent()) );
+
+    m_Timer->start(MS_TO_NEXT_EVENT);
+
+    m_CurrSpeedModifier = m_PongModel->showBallSpeed();
+    m_Speed = MS_TO_NEXT_EVENT;
     drawBoard();
 }
 
@@ -38,12 +47,41 @@ MainWindow::~MainWindow(){
     delete ui;
 }
 
-void MainWindow::timerEvent(QTimerEvent *){
+void MainWindow::checkTimer(){
+    int ballSpeed = m_PongModel->showBallSpeed();
+
+    if(m_CurrSpeedModifier == ballSpeed) return;
+
+    if(m_CurrSpeedModifier < ballSpeed){
+        m_Speed -= 20;
+        if(m_Speed < 0) m_Speed = 1;
+        m_Timer->setInterval(m_Speed);
+    }
+
+    else{
+        if(m_Speed * m_CurrSpeedModifier < MS_TO_NEXT_EVENT){
+            m_Speed *= m_CurrSpeedModifier;
+            m_Timer->setInterval(m_Speed);
+        }
+    }
+
+    m_CurrSpeedModifier = ballSpeed;
+}
+
+void MainWindow::resetTimeStuff(){
+    m_Timer->setInterval(MS_TO_NEXT_EVENT);
+    m_Speed = MS_TO_NEXT_EVENT;
+    m_CurrSpeedModifier = m_PongModel->showBallSpeed();
+}
+
+
+void MainWindow::timerEvent(){
     if(m_PongIsRunning == true){
         qApp->processEvents();
         m_PongModel->moveBall();
         m_PongModel->refresh();
         drawBoard();
+        checkTimer();
         checkWinner();
     }
 }
@@ -55,11 +93,11 @@ void MainWindow::on_actionStart_triggered(){
 }
 
 void MainWindow::checkWinner(){
-    int frstScore = m_PongModel->showScore(FIRST_P);
-    int scndScore = m_PongModel->showScore(SECOND_P);
+    int frstScore = m_PongModel->showScore(FIRST_PLAYER);
+    int scndScore = m_PongModel->showScore(SECOND_PLAYER);
 
     if(frstScore == POINTS_TO_WIN || scndScore == POINTS_TO_WIN){
-        QString WinnerName = (frstScore == POINTS_TO_WIN ? m_PongModel->showName(FIRST_P) : m_PongModel->showName(SECOND_P));
+        QString WinnerName = (frstScore == POINTS_TO_WIN ? m_PongModel->showName(FIRST_PLAYER) : m_PongModel->showName(SECOND_PLAYER));
         QMessageBox::StandardButton butt;
 
         butt = QMessageBox::question(0, "Wygrana", QString("Wygrał %1 czy chcesz grać dalej?").arg(WinnerName),
@@ -76,8 +114,8 @@ void MainWindow::checkWinner(){
 }
 
 void MainWindow::drawBoard(){
-    ui->ScoreFirstPlayer->display(m_PongModel->showScore(FIRST_P));
-    ui->ScoreSecondPlayer->display(m_PongModel->showScore(SECOND_P));
+    ui->ScoreFirstPlayer->display(m_PongModel->showScore(FIRST_PLAYER));
+    ui->ScoreSecondPlayer->display(m_PongModel->showScore(SECOND_PLAYER));
 
     QImage next = m_PongCurrentImage;
     const Map & map = m_PongModel->showMap();
@@ -101,7 +139,7 @@ void MainWindow::on_actionMakeNoise_triggered()
 
 void MainWindow::on_actionFirstPlayerUp_triggered(){
     if(m_PongIsRunning){
-        m_PongModel->movePaddle(FIRST_P, UP);
+        m_PongModel->movePaddle(FIRST_PLAYER, UP);
         m_PongModel->refresh();
         drawBoard();
     }
@@ -109,7 +147,7 @@ void MainWindow::on_actionFirstPlayerUp_triggered(){
 
 void MainWindow::on_actionFirstPlayerDown_triggered(){
     if(m_PongIsRunning){
-        m_PongModel->movePaddle(FIRST_P, DOWN);
+        m_PongModel->movePaddle(FIRST_PLAYER, DOWN);
         m_PongModel->refresh();
         drawBoard();
     }
@@ -117,7 +155,7 @@ void MainWindow::on_actionFirstPlayerDown_triggered(){
 
 void MainWindow::on_actionSecondPlayerUp_triggered(){
     if(m_PongIsRunning){
-        m_PongModel->movePaddle(SECOND_P, UP);
+        m_PongModel->movePaddle(SECOND_PLAYER, UP);
         m_PongModel->refresh();
         drawBoard();
     }
@@ -125,7 +163,7 @@ void MainWindow::on_actionSecondPlayerUp_triggered(){
 
 void MainWindow::on_actionSecondPlayerDown_triggered(){
     if(m_PongIsRunning){
-        m_PongModel->movePaddle(SECOND_P, DOWN);
+        m_PongModel->movePaddle(SECOND_PLAYER, DOWN);
         m_PongModel->refresh();
         drawBoard();
     }

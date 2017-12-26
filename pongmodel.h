@@ -10,28 +10,31 @@
 typedef QVector<int> Row;
 typedef QVector<Row> Map;
 
-enum {PADDLE_SIZE = 5, FIRST_LOC = 0, SECOND_LOC = 1, FIRST_P = 0, SECOND_P = 1};
-enum {FIRST_GATE  = -2, SECOND_GATE = -1, EMPTY = 0, WALL = 1, PADDLE = 2, BALL = 3, UP = 1, DOWN = 0};
 enum {POINTS_TO_WIN = 10};
 
-
+enum {CENTLINE = 6,FIRST_GATE  = -2, SECOND_GATE = -1, EMPTY = 0, WALL = 1, PAD_CENTER = 2, PAD_DEV = 3, PAD_BORDER = 4, BALL = 5};
+enum {PAD_SIZE = 5, FIRST_LOC = 0, SECOND_LOC = 1, FIRST_PLAYER = 0, SECOND_PLAYER = 1, UP = 1, DOWN = 0};
 
 class Ball : QObject{
     Q_OBJECT
 public:
-    Ball(QPoint myPos);
-    void    setPosition(QPoint newPos);
-    bool    moveMe(const Map &map);
-    QPoint  myPos();
+    Ball(QPoint myPosition);
+    void            setPosition(QPoint newPos);
+    void            moveMe(const Map &map);
+    QPoint          showPos();
+    int             showSpeed();
 
 signals:
-    void firstGetPoints();
-    void secondGetPoints();
+    void            firstGetPoints();
+    void            secondGetPoints();
 
 private:
-    struct Reflect{bool x, y;};
-    QPoint  m_Position;
-    Reflect m_Reflection;
+    void            resetSpeed();
+    struct          Reflect{bool x, y;};
+    QPoint          m_Position;
+    Reflect         m_Reflection;
+    int             m_Speed;
+    int             m_LastHit;
 };
 
 
@@ -39,14 +42,17 @@ private:
 class Paddle{
 public:
     Paddle(int mySize, QSize mapSize, int givenSpace);
-    void    moveMe(bool upTrueDownFalse);
-    QPoint  myPos();
-    int     mySize();
+    void            moveMe(bool upTrueDownFalse);
+    QPoint          myPos();
+    int             mySize();
+    const QVector<int> & myStructure();
 
 private:
-    QPoint  m_Position;
-    int     m_Size;
-    QSize   m_MapSize;
+    void            createPadStructure();
+    QPoint          m_Position;
+    int             m_PadSize;
+    QSize           m_MapSize;
+    QVector<int>    m_PadStructure;
 };
 
 
@@ -54,19 +60,21 @@ private:
 class Playmap{
 public:
     Playmap(QSize mapSize);
-    void clearMap();
-    void putBall(Ball * ball);
-    void putPaddle(Paddle * paddle);
-    void drawMap() const;
-    const Map & showMap() const;
-    void makeNoise(int wallsNumber);
+    void            clearMap();
+    void            putBall(Ball * ball);
+    void            putPaddle(Paddle * paddle);
+    void            drawMap() const;
+    const Map &     showMap() const;
+    void            makeNoise(int wallsNumber);
+
+    void makeCenterLine();
 
 private:
-    void makeMap();
-    void makeWallsAndGates();
+    void            makeEmptyMap();
+    void            makeWallsAndGates();
 
-    QSize   m_MapSize;
-    Map     m_Map;
+    QSize           m_MapSize;
+    Map             m_Map;
 };
 
 
@@ -75,15 +83,15 @@ class Player : QObject{
     Q_OBJECT
 public:
     Player(int myNr);
-    void    addPoint();
-    void    resetPoints();
-    int     showPoints();
-    QString showName();
+    void            addPoint();
+    void            resetPoints();
+    int             showPoints();
+    QString         showName();
 
 private:
-    int     m_Score;
-    int     m_PlayerNumber;
-    QString m_Name;
+    int             m_Score;
+    int             m_PlayerNumber;
+    QString         m_Name;
 };
 
 
@@ -94,28 +102,32 @@ public:
     PongModel(const int WIDTH, const int HEIGHT);
     PongModel(PongModel &) = delete;
     PongModel & operator=(const PongModel &) = delete;
-    const   Map & showMap();
-    void    makeNoise(int wallsNumber);
-    void    movePaddle(int player, int way);
-    void    moveBall();
-    void    refresh();
-    void    setBasicPositions();
-    void    setBasicConfiguration();
-    int     showScore(int player);
-    QString showName(int player);
+    const Map &     showMap();
+    void            makeNoise(int wallsNumber);
+    void            movePaddle(int player, int way);
+    void            moveBall();
+    void            refresh();
+    void            setBasicPositions();
+    void            setBasicConfiguration();
+    int             showScore(int player);
+    QString         showName(int player);
+    int             showBallSpeed();
     ~PongModel();
 
 public slots:
-    void firstPlayerAddPoints();
-    void secondPlayerAddPoints();
+    void            firstPlayerAddPoints();
+    void            secondPlayerAddPoints();
+
+signals:
+    void            sbGetPoints();
 
 private:
-    const QSize   GAME_SIZE;
-    const QPoint  CENTER_POS;
-    Player  * m_FirstPlayer, * m_SecondPlayer;
-    Paddle  * m_FirstPaddle, * m_SecondPaddle;
-    Ball    * m_Ball;
-    Playmap * m_PlayMap;
+    const QSize     GAME_SIZE;
+    const QPoint    CENTER_POS;
+    Player          * m_FirstPlayer, * m_SecondPlayer;
+    Paddle          * m_FirstPaddle, * m_SecondPaddle;
+    Ball            * m_Ball;
+    Playmap         * m_PlayMap;
 };
 
 #endif // PONGMODEL_H
