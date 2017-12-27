@@ -12,7 +12,7 @@ typedef QVector<Row> Map;
 
 enum {POINTS_TO_WIN = 10};
 
-enum {CENTLINE = 6,FIRST_GATE  = -2, SECOND_GATE = -1, EMPTY = 0, WALL = 1, PAD_CENTER = 2, PAD_DEV = 3, PAD_BORDER = 4, BALL = 5};
+enum {FIRST_GATE  = -2, SECOND_GATE = -1, EMPTY = 0, CENTLINE = 1, BALL = 2, WALL = 3, PAD_CENTER = 4, PAD_DEV = 5, PAD_BORDER = 6};
 enum {PAD_SIZE = 5, FIRST_LOC = 0, SECOND_LOC = 1, FIRST_PLAYER = 0, SECOND_PLAYER = 1, UP = 1, DOWN = 0};
 
 class Ball : QObject{
@@ -35,6 +35,14 @@ private:
     Reflect         m_Reflection;
     int             m_Speed;
     int             m_LastHit;
+    bool            m_DrunkBallWayFlag  = false;
+    bool            m_isBallDrunk       = false;
+
+    void doBallCollisions(bool &modifier, int nextPos);
+    void doBallMovement(QPoint &newPos);
+    void doBallPadCenterReflection(QPoint &newPos);
+    void doBallDrunkReflection(QPoint &newPos, int &nextPos, QPoint &newFirst, QPoint &newSecond, const Map &map);
+    void doBallStdReflections(const Map &map, QPoint &newFirst, int &nextPos, QPoint &newPos, QPoint &newSecond);
 };
 
 

@@ -1,0 +1,12 @@
+<RCC>
+    <qresource prefix="/">
+        <file alias="sounds/Gate.wav">sounds/Gate.wav</file>
+        <file alias="sounds/Pallet.wav">sounds/Pallet.wav</file>
+        <file alias="sounds/Wall.wav">sounds/Wall.wav</file>
+        <file alias="sounds/ACDC.wav">sounds/ACDC.wav</file>
+        <file alias="icos/StartGame.ico">icos/StartGame.ico</file>
+        <file alias="icos/AddNoise.ico">icos/AddNoise.ico</file>
+        <file alias="icos/SoundOFF.ico">icos/SoundOFF.ico</file>
+        <file alias="icos/SoundON.ico">icos/SoundON.ico</file>
+    </qresource>
+</RCC>

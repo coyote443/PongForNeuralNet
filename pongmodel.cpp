@@ -2,7 +2,10 @@
 #include <stdexcept>
 #include <QTime>
 #include <QDebug>
-#include <QApplication>
+#include <QSound>
+
+
+// BUG PALETKA BOKIEM WCHODZI NA PIŁKĘ
 
 static QTextStream cout(stdout);
 
@@ -21,71 +24,152 @@ void Ball::setPosition(QPoint newPos){
     m_Position = newPos;
 }
 
+void Ball::doBallStdReflections(const Map &map, QPoint &newFirst, int &nextPos, QPoint &newPos, QPoint &newSecond)
+{
+    m_Reflection.x == true ? newPos.setX(newPos.x() + 1) : newPos.setX(newPos.x() - 1);
+    m_Reflection.y == true ? newPos.setY(newPos.y() + 1) : newPos.setY(newPos.y() - 1);
+    int newX = m_Position.x() - newPos.x();
+    int newY = m_Position.y() - newPos.y();
+
+    newFirst.setX(m_Position.x() - newX);
+    newFirst.setY(m_Position.y());
+
+    newSecond.setX(m_Position.x());
+    newSecond.setY(m_Position.y() - newY);
+
+    int howManyBlocked  = 0;
+    int mapFirst        = map[newFirst.y()][newFirst.x()];
+    int mapSecond       = map[newSecond.y()][newSecond.x()];
+
+    if(mapFirst > BALL){
+        nextPos = mapFirst;
+        nextPos = PAD_DEV;
+        if(mapFirst == PAD_CENTER)  nextPos = PAD_CENTER;
+        if(mapFirst == PAD_BORDER)  nextPos = PAD_BORDER;
+        howManyBlocked++;
+    }
+
+    if(mapSecond > BALL){
+        nextPos = mapSecond;
+        nextPos = WALL;
+        howManyBlocked++;
+    }
+
+    if(howManyBlocked == 0){
+        nextPos = map[newPos.y()][newPos.x()];
+    }
+
+    if(howManyBlocked == 2){
+        m_Reflection.y = !m_Reflection.y;
+        m_Reflection.x = !m_Reflection.x;
+        newPos = m_Position;
+    }
+}
+
+void Ball::doBallCollisions(bool & modifier, int nextPos)
+{
+    switch (nextPos) {
+    case FIRST_GATE:
+        m_LastHit = EMPTY;
+        m_isBallDrunk = false;
+        modifier = false;
+        resetSpeed();
+        QSound::play(":/sounds/Gate.wav");
+        emit secondGetPoints();
+        break;
+
+    case SECOND_GATE:
+        m_LastHit = EMPTY;
+        m_isBallDrunk = false;
+        modifier = false;
+        resetSpeed();
+        QSound::play(":/sounds/Gate.wav");
+        emit firstGetPoints();
+        break;
+
+    case WALL:
+        m_LastHit = WALL;
+        if(m_isBallDrunk == true) m_LastHit = PAD_DEV;
+        QSound::play(":/sounds/Wall.wav");
+        m_Reflection.y = !m_Reflection.y;
+        break;
+
+    case PAD_CENTER:
+        m_LastHit = PAD_CENTER;
+        m_isBallDrunk = false;
+        QSound::play(":/sounds/Pallet.wav");
+        m_Reflection.x = !m_Reflection.x;
+        if(m_Speed > 2) m_Speed--;
+        break;
+
+    case PAD_DEV:
+        m_LastHit = PAD_DEV;
+        m_isBallDrunk = false;
+        QSound::play(":/sounds/Pallet.wav");
+        m_Reflection.x = !m_Reflection.x;
+        break;
+
+    case PAD_BORDER:
+        m_LastHit = PAD_BORDER;
+        m_isBallDrunk = false;
+        QSound::play(":/sounds/Pallet.wav");
+        m_Reflection.x = !m_Reflection.x;
+        m_Speed++;
+        break;
+    }
+}
+
+void Ball::doBallMovement(QPoint & newPos)
+{
+    m_Reflection.x == true ? m_Position.setY(newPos.y()) : m_Position.setY(newPos.y());
+    m_Reflection.y == true ? m_Position.setX(newPos.x()) : m_Position.setX(newPos.x());
+}
+
+void Ball::doBallPadCenterReflection(QPoint & newPos)
+{
+    m_Reflection.x == true ? newPos.setX(newPos.x() + 1) : newPos.setX(newPos.x() - 1);
+    m_Reflection.y == true ? newPos.setY(newPos.y()) : newPos.setY(newPos.y());
+}
+
+void Ball::doBallDrunkReflection(QPoint & newPos, int & nextPos, QPoint & newFirst, QPoint & newSecond, const Map &map)
+{
+    m_isBallDrunk = true;
+    m_DrunkBallWayFlag = !m_DrunkBallWayFlag;
+    if(m_DrunkBallWayFlag == true){
+        doBallPadCenterReflection(newPos);
+        nextPos = map[newPos.y()][newPos.x()];
+    }
+    else
+        doBallStdReflections(map, newFirst, nextPos, newPos, newSecond);
+}
+
 void Ball::moveMe(const Map &map){
-    QPoint newPos = m_Position;
-    bool modifier = true;
+    QPoint newFirst, newSecond;
+    QPoint newPos   = m_Position;
+    bool modifier   = true;
+    int nextPos     = EMPTY;
 
     switch(m_LastHit){
     case PAD_CENTER :
-        m_Reflection.x == true ? newPos.setX(newPos.x() + 1) : newPos.setX(newPos.x() - 1);
-        m_Reflection.y == true ? newPos.setY(newPos.y()) : newPos.setY(newPos.y());
+        doBallPadCenterReflection(newPos);
+        nextPos = map[newPos.y()][newPos.x()];
         break;
 
-    //case PAD_DEV: // liczenie trajektorii
+    case PAD_DEV: // liczenie trajektorii
+        doBallDrunkReflection(newPos, nextPos, newFirst, newSecond, map);
+        break;
 
-
-    default:
-        m_Reflection.x == true ? newPos.setX(newPos.x() + 1) : newPos.setX(newPos.x() - 1);
-        m_Reflection.y == true ? newPos.setY(newPos.y() + 1) : newPos.setY(newPos.y() - 1);
+    default:    // EMPTY
+        doBallStdReflections(map, newFirst, nextPos, newPos, newSecond);
     }
 
-    int nextPos = map[newPos.y()][newPos.x()];
-
     if(nextPos == EMPTY || nextPos == CENTLINE){
-        m_Reflection.x == true ? m_Position.setY(newPos.y()) : m_Position.setY(newPos.y());
-        m_Reflection.y == true ? m_Position.setX(newPos.x()) : m_Position.setX(newPos.x());
+        doBallMovement(newPos);
     }
 
     else{
-        switch (nextPos) {
-        case FIRST_GATE:
-            m_LastHit = EMPTY;
-            modifier = false;
-            resetSpeed();
-            emit secondGetPoints();
-            break;
-
-        case SECOND_GATE:
-            m_LastHit = EMPTY;
-            modifier = false;
-            resetSpeed();
-            emit firstGetPoints();
-            break;
-
-        case WALL:
-            m_LastHit = WALL;
-            m_Reflection.y = !m_Reflection.y;
-            break;
-
-        case PAD_CENTER:
-            m_LastHit = PAD_CENTER;
-            m_Reflection.x = !m_Reflection.x;
-            if(m_Speed > 2) m_Speed--;
-            break;
-
-        case PAD_DEV:
-            m_LastHit = PAD_DEV;
-            m_Reflection.x = !m_Reflection.x;
-            break;
-
-        case PAD_BORDER:
-            m_LastHit = PAD_BORDER;
-            m_Reflection.x = !m_Reflection.x;
-            m_Speed++;
-            break;
-        }
-        QApplication::beep();
-        moveMe(map);
+         doBallCollisions(modifier, nextPos);
+         moveMe(map);
     }
 }
 

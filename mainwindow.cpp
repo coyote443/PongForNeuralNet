@@ -1,21 +1,24 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-
 #include "pongwidget.h"
 #include "pongmodel.h"
+
 #include <QInputDialog>
 #include <QMessageBox>
-
-#include <QDebug>
 #include <QTimer>
+#include <QIcon>
+#include <QDebug>
 
 static QTextStream cout(stdout);
 
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow)
+    ui(new Ui::MainWindow),
+    m_BackgroundMusic(":/sounds/ACDC.wav")
 {
+    m_BackgroundMusic.play();
+
     ui->setupUi(this);
     m_PongWidget    = new PongWidget(this);
     m_PongModel     = new PongModel(WIDTH, HEIGHT);
@@ -40,6 +43,11 @@ MainWindow::MainWindow(QWidget *parent) :
 
     m_CurrSpeedModifier = m_PongModel->showBallSpeed();
     m_Speed = MS_TO_NEXT_EVENT;
+
+    ui->actionStart->setIcon(QIcon(":/icos/StartGame.ico"));
+    ui->actionMakeNoise->setIcon(QIcon(":/icos/AddNoise.ico"));
+    ui->actionStop_Music->setIcon(QIcon(":/icos/SoundON.ico"));
+
     drawBoard();
 }
 
@@ -54,7 +62,7 @@ void MainWindow::checkTimer(){
 
     if(m_CurrSpeedModifier < ballSpeed){
         m_Speed -= 20;
-        if(m_Speed < 0) m_Speed = 1;
+        if(m_Speed < 20) m_Speed = 1;
         m_Timer->setInterval(m_Speed);
     }
 
@@ -168,3 +176,17 @@ void MainWindow::on_actionSecondPlayerDown_triggered(){
         drawBoard();
     }
 }
+
+void MainWindow::on_actionStop_Music_triggered(bool checked){
+    if(checked){
+        m_BackgroundMusic.stop();
+        ui->actionStop_Music->setIcon(QIcon(":/icos/SoundOFF.ico"));
+        ui->actionStop_Music->setText("Play Music");
+    }
+    else{
+        m_BackgroundMusic.play();
+        ui->actionStop_Music->setIcon(QIcon(":/icos/SoundON.ico"));
+        ui->actionStop_Music->setText("Stop Music");
+    }
+}
+

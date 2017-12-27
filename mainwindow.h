@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QTime>
+#include <QSound>
 
 class PongWidget;
 class PongModel;
@@ -30,7 +31,7 @@ private slots:
     void on_actionSecondPlayerUp_triggered();
     void on_actionSecondPlayerDown_triggered();
     void timerEvent();
-
+    void on_actionStop_Music_triggered(bool checked);
 
 private:
     Ui::MainWindow *ui;
@@ -43,6 +44,7 @@ private:
     QTimer*     m_Timer;
     int         m_CurrSpeedModifier;
     int         m_Speed;
+    QSound      m_BackgroundMusic;
 };
 
 #endif // MAINWINDOW_H
