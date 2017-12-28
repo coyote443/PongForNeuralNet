@@ -21,6 +21,8 @@ public:
     void checkTimer();
     ~MainWindow();
 
+    void checkSIMovement();
+
 private slots:
     void on_actionStart_triggered();
     void drawBoard();
@@ -31,7 +33,9 @@ private slots:
     void on_actionSecondPlayerUp_triggered();
     void on_actionSecondPlayerDown_triggered();
     void timerEvent();
-    void on_actionStop_Music_triggered(bool checked);
+    void on_actionStop_Music_triggered();
+
+    void on_actionSI_triggered();
 
 private:
     Ui::MainWindow *ui;
@@ -45,6 +49,9 @@ private:
     int         m_CurrSpeedModifier;
     int         m_Speed;
     QSound      m_BackgroundMusic;
+    bool        m_IsBackgroundPlay      = true;
+    bool        m_IsSIPlay              = false;
+    void checkMusicLoop();
 };
 
 #endif // MAINWINDOW_H

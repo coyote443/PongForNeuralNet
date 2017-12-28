@@ -16,7 +16,7 @@ void Ball::resetSpeed(){
     m_Speed = 1;
 }
 
-int Ball::showSpeed(){
+const int & Ball::showSpeed() const{
     return m_Speed;
 }
 
@@ -163,9 +163,8 @@ void Ball::moveMe(const Map &map){
         doBallStdReflections(map, newFirst, nextPos, newPos, newSecond);
     }
 
-    if(nextPos == EMPTY || nextPos == CENTLINE){
+    if(nextPos == EMPTY || nextPos == CENTLINE)
         doBallMovement(newPos);
-    }
 
     else{
          doBallCollisions(modifier, nextPos);
@@ -173,7 +172,7 @@ void Ball::moveMe(const Map &map){
     }
 }
 
-QPoint Ball::showPos(){
+const QPoint & Ball::showPos() const{
     return m_Position;
 }
 
@@ -186,25 +185,24 @@ Ball::Ball(QPoint myPosition) : m_Position(myPosition){
 
 ////    PADDLE
 
-void Paddle::moveMe(bool upTrueDownFalse){
+void Paddle::moveMe(int way){
     int upBorder    = 0;
     int downBorder  = m_MapSize.height();
-
-    if(upTrueDownFalse == true){
+    if(way == UP){
         if(m_Position.x() - 1 != upBorder)
                 m_Position.setX(m_Position.x() - 1);
     }
-    else{
+    else if(way == DOWN){
         if(m_Position.x() + m_PadSize + 1 != downBorder -1)
              m_Position.setX(m_Position.x() + 1);
     }
 }
 
-int Paddle::mySize(){
+const int &Paddle::mySize()const{
     return m_PadSize;
 }
 
-QPoint Paddle::myPos(){
+const QPoint &Paddle::myPos()const{
     return m_Position;
 }
 
@@ -362,7 +360,7 @@ Playmap::Playmap(QSize mapSize) : m_MapSize(mapSize){
 
 ////    PLAYER
 
-QString Player::showName(){
+const QString &Player::showName() const{
     return m_Name;
 }
 
@@ -370,7 +368,7 @@ void Player::resetPoints(){
     m_Score = 0;
 }
 
-int Player::showPoints(){
+const int &Player::showPoints()const{
     return m_Score;
 }
 
@@ -386,11 +384,11 @@ Player::Player(int myNr) : m_PlayerNumber(myNr){
 
 ////    PONG MODEL
 
-QString PongModel::showName(int player){
+const QString & PongModel::showName(int player)const{
     return player == FIRST_PLAYER ? m_FirstPlayer->showName() : m_SecondPlayer->showName();
 }
 
-int PongModel::showScore(int player){
+const int &PongModel::showScore(int player)const{
     return player == FIRST_PLAYER ? m_FirstPlayer->showPoints() : m_SecondPlayer->showPoints();
 }
 
@@ -411,7 +409,7 @@ void PongModel::setBasicPositions(){
 
     refresh();
 }
-int PongModel::showBallSpeed(){
+const int & PongModel::showBallSpeed() const{
     return m_Ball->showSpeed();
 }
 
@@ -431,7 +429,7 @@ void PongModel::moveBall(){
     m_Ball->moveMe(m_PlayMap->showMap());
 }
 
-void PongModel::refresh(){
+void PongModel::refresh() const{
     m_PlayMap->clearMap();
     m_PlayMap->putBall(m_Ball);
     m_PlayMap->putPaddle(m_FirstPaddle);
@@ -439,19 +437,51 @@ void PongModel::refresh(){
     m_PlayMap->makeCenterLine();
 }
 
+int PongModel::movePaddleSI(){
+    int field       = CENTER_POS.x() + CENTER_POS.x() / 6;
+    int bPos        = m_Ball->showPos().x();
+    bool isSIField  = field < bPos;
+
+    if(isSIField){
+        static int oldBallPos   = CENTER_POS.y();
+        int ballPos             = m_Ball->showPos().y();
+        int diff                = oldBallPos - ballPos;
+        oldBallPos              = ballPos;
+
+        if(diff == -1)
+            return DOWN;
+        else if(diff == 0)
+            return NOWHERE;
+        else if(diff == 1)
+            return UP;
+    }
+    return NOWHERE;
+}
+
 void PongModel::movePaddle(int player, int way){
-    player == FIRST_PLAYER ? m_FirstPaddle->moveMe(way) : m_SecondPaddle->moveMe(way);
+    switch (player) {
+    case FIRST_PLAYER:
+        m_FirstPaddle->moveMe(way);
+        break;
+    case SECOND_PLAYER:
+        m_SecondPaddle->moveMe(way);
+        break;
+    case COMPUTER:
+        m_SecondPaddle->moveMe(movePaddleSI());
+        break;
+    }
 }
 
 void PongModel::makeNoise(int wallsNumber){
     m_PlayMap->makeNoise(wallsNumber);
 }
 
-const Map & PongModel::showMap(){
+const Map & PongModel::showMap() const{
     return m_PlayMap->showMap();
 }
 
-PongModel::PongModel(const int WIDTH, const int HEIGHT) :
+PongModel::PongModel(const int WIDTH, const int HEIGHT, QObject * parent) :
+    QObject(parent),
     CENTER_POS      (QPoint(WIDTH / 2, HEIGHT / 2)),
     GAME_SIZE       (QSize(WIDTH, HEIGHT)){
 
@@ -466,23 +496,17 @@ PongModel::PongModel(const int WIDTH, const int HEIGHT) :
     m_PlayMap->putPaddle(m_FirstPaddle);
     m_PlayMap->putPaddle(m_SecondPaddle);
 
-    connect((const QObject *)m_Ball, SIGNAL(firstGetPoints()), this, SLOT(firstPlayerAddPoints()) );
-    connect((const QObject *)m_Ball, SIGNAL(secondGetPoints()), this, SLOT(secondPlayerAddPoints()));
+    connect(m_Ball, SIGNAL(firstGetPoints()), this, SLOT(firstPlayerAddPoints()) );
+    connect(m_Ball, SIGNAL(secondGetPoints()), this, SLOT(secondPlayerAddPoints()));
 }
 
 PongModel::~PongModel(){
-    delete m_PlayMap;
-    m_PlayMap       = nullptr;
-    delete m_Ball;
-    m_Ball          = nullptr;
-    delete m_FirstPlayer;
-    m_FirstPlayer   = nullptr;
-    delete m_SecondPlayer;
-    m_SecondPlayer  = nullptr;
-    delete m_FirstPaddle;
-    m_FirstPaddle   = nullptr;
-    delete m_SecondPaddle;
-    m_SecondPaddle  = nullptr;
-}
+    delete m_PlayMap,
+           m_Ball,
+           m_FirstPlayer,
+           m_SecondPlayer,
+           m_FirstPaddle,
+           m_SecondPaddle;
+    }
 
 

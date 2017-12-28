@@ -186,6 +186,8 @@
    <addaction name="actionMakeNoise"/>
    <addaction name="separator"/>
    <addaction name="actionStop_Music"/>
+   <addaction name="separator"/>
+   <addaction name="actionSI"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <action name="actionStart">
@@ -257,6 +259,14 @@
    </property>
    <property name="shortcut">
     <string>M</string>
+   </property>
+  </action>
+  <action name="actionSI">
+   <property name="text">
+    <string>SI</string>
+   </property>
+   <property name="toolTip">
+    <string>SI - rozgrywka z udziałem komputera</string>
    </property>
   </action>
  </widget>

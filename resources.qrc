@@ -8,5 +8,6 @@
         <file alias="icos/AddNoise.ico">icos/AddNoise.ico</file>
         <file alias="icos/SoundOFF.ico">icos/SoundOFF.ico</file>
         <file alias="icos/SoundON.ico">icos/SoundON.ico</file>
+        <file alias="icos/SI.ico">icos/SI.ico</file>
     </qresource>
 </RCC>

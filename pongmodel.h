@@ -10,27 +10,27 @@
 typedef QVector<int> Row;
 typedef QVector<Row> Map;
 
-enum {POINTS_TO_WIN = 10};
+enum {POINTS_TO_WIN = 10, PAD_SIZE = 5, FIRST_PLAYER = 0, SECOND_PLAYER = 1, COMPUTER = 2,};
 
 enum {FIRST_GATE  = -2, SECOND_GATE = -1, EMPTY = 0, CENTLINE = 1, BALL = 2, WALL = 3, PAD_CENTER = 4, PAD_DEV = 5, PAD_BORDER = 6};
-enum {PAD_SIZE = 5, FIRST_LOC = 0, SECOND_LOC = 1, FIRST_PLAYER = 0, SECOND_PLAYER = 1, UP = 1, DOWN = 0};
+enum {FIRST_LOC = 0, SECOND_LOC = 1, NOWHERE = 3, UP = 1, DOWN = 0};
 
-class Ball : QObject{
+class Ball : public QObject{
     Q_OBJECT
 public:
     Ball(QPoint myPosition);
     void            setPosition(QPoint newPos);
     void            moveMe(const Map &map);
-    QPoint          showPos();
-    int             showSpeed();
+    const QPoint &  showPos() const;
+    const int &     showSpeed() const;
 
 signals:
     void            firstGetPoints();
     void            secondGetPoints();
 
 private:
-    void            resetSpeed();
     struct          Reflect{bool x, y;};
+    void            resetSpeed();
     QPoint          m_Position;
     Reflect         m_Reflection;
     int             m_Speed;
@@ -50,9 +50,9 @@ private:
 class Paddle{
 public:
     Paddle(int mySize, QSize mapSize, int givenSpace);
-    void            moveMe(bool upTrueDownFalse);
-    QPoint          myPos();
-    int             mySize();
+    void            moveMe(int way);
+    const QPoint &  myPos() const;
+    const int &     mySize() const;
     const QVector<int> & myStructure();
 
 private:
@@ -68,33 +68,31 @@ private:
 class Playmap{
 public:
     Playmap(QSize mapSize);
-    void            clearMap();
     void            putBall(Ball * ball);
     void            putPaddle(Paddle * paddle);
+    void            makeNoise(int wallsNumber);
+    void            makeCenterLine();
+    void            clearMap();
     void            drawMap() const;
     const Map &     showMap() const;
-    void            makeNoise(int wallsNumber);
-
-    void makeCenterLine();
 
 private:
     void            makeEmptyMap();
     void            makeWallsAndGates();
-
     QSize           m_MapSize;
     Map             m_Map;
 };
 
 
 
-class Player : QObject{
+class Player : public QObject{
     Q_OBJECT
 public:
     Player(int myNr);
     void            addPoint();
     void            resetPoints();
-    int             showPoints();
-    QString         showName();
+    const int &     showPoints() const;
+    const QString & showName() const;
 
 private:
     int             m_Score;
@@ -104,22 +102,21 @@ private:
 
 
 
-class PongModel : QObject{
+class PongModel : public QObject{
     Q_OBJECT
 public:
-    PongModel(const int WIDTH, const int HEIGHT);
+    PongModel(const int WIDTH, const int HEIGHT, QObject *parent = 0);
     PongModel(PongModel &) = delete;
     PongModel & operator=(const PongModel &) = delete;
-    const Map &     showMap();
     void            makeNoise(int wallsNumber);
     void            movePaddle(int player, int way);
     void            moveBall();
-    void            refresh();
-    void            setBasicPositions();
     void            setBasicConfiguration();
-    int             showScore(int player);
-    QString         showName(int player);
-    int             showBallSpeed();
+    void            refresh() const;
+    const Map &     showMap() const;
+    const int &     showScore(int player) const;
+    const QString & showName(int player) const;
+    const int &     showBallSpeed() const;
     ~PongModel();
 
 public slots:
@@ -130,6 +127,8 @@ signals:
     void            sbGetPoints();
 
 private:
+    void            setBasicPositions();
+    int movePaddleSI();
     const QSize     GAME_SIZE;
     const QPoint    CENTER_POS;
     Player          * m_FirstPlayer, * m_SecondPlayer;
